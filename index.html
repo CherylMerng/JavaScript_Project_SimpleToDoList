@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To Do Project</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/all.min.css">
+</head>
+<body>
+    <nav class="navbar bg-dark navbar-dark">
+        <div class="container" style="max-width: 600px;">
+            <a href="#" class="navbar-brand">
+                Todo 
+                <!-- for update count function -->
+                <span class="badge bg-danger ms-2">0</span>
+            </a>
+
+            <a href="#" id="clear1" class="navbar-brand">Clear Unchecked</a>
+            <a href="#" id="clear2" class="navbar-brand">Clear Checked</a>
+            <a href="#" id="clear3" class="navbar-brand">Clear All</a>
+
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 600px;">
+        <div class="input-group my-4">
+            <input type="text" class="form-control me-2">
+            <button class="btn btn-dark">Add</button>
+        </div>
+
+        <!-- unchecked list -->
+        <ul id="todo" class="list-group"></ul>
+        <!-- checked list - for checked function -->
+        <ul id="done" class="list-group mt-4 opacity-50"></ul>
+
+    </div>
+
+    <script>
+        // local storage start
+
+        // show data in local storage after page refresh
+        let data = getData();
+        data.map(item => createItem(item.text, item.done));
+
+        function getData() {
+            // if no data, return empty array
+            return JSON.parse(localStorage.getItem("data")) || [];
+                // convert String to Object
+        }
+
+        function saveData(text) {
+            // read current data
+            let data = getData();
+            // add obj into current data
+            data.push({ text, done: false});
+            localStorage.setItem("data", JSON.stringify(data)); 
+                // convert Object to String
+            
+        }
+
+        function deleteData(text) {
+            let data = getData();
+            // exclude the given text (current text)
+            let result = data.filter(item => item.text != text);
+            localStorage.setItem("data", JSON.stringify(result));
+        }
+
+        function checkData(text) {
+            let data = getData();
+            let result = data.map( item => {
+                if (item.text == text) item.done = true;
+                return item;
+            });
+            localStorage.setItem("data", JSON.stringify(result));
+        }
+        // local storage end
+
+        // clear list start - not in local storage
+        document.querySelector("#clear1").onclick = function() {
+            document.querySelector("#done").textContent = "";
+        }
+
+        document.querySelector("#clear2").onclick = function() {
+            document.querySelector("#todo").textContent = "";
+        }
+
+        document.querySelector("#clear3").onclick = function() {
+            // document.querySelector("#todo").textContent = "";
+            // document.querySelector("#done").textContent = "";
+            document.querySelector("#clear1").onclick();
+            document.querySelector("#clear2").onclick();
+        }
+        // clear list end
+
+        // update count function
+        function updateCount() {
+            document.querySelector(".badge").textContent = 
+                document.querySelectorAll("#todo li").length;
+        }
+
+        // button onclick function
+        document.querySelector("button").onclick = function() {
+
+            let text = document.querySelector("input").value;
+            if (text == "") return false;
+
+            createItem(text);
+            saveData(text);     // local storage
+            updateCount();      // calling update count function
+
+            document.querySelector("input").value = "";
+            document.querySelector("input").focus();
+        }
+
+        // press enter in input box
+        document.querySelector("input").onkeydown = function(e) {
+            if (e.key == "Enter") {
+                document.querySelector("button").onclick(); 
+                // method calling for button and run the function ()
+            }
+        }
+
+        // create list item
+        function createItem(text, done=false) {   // if done value not given => give false
+            
+            // add function
+            let li = document.createElement("li");
+            li.classList.add("list-group-item");
+            li.textContent = text;
+
+            // delete function
+            let del = document.createElement("a");
+            del.setAttribute("href", "#");
+            del.classList.add("fa-solid", "fa-trash", "text-danger", "float-end");
+            
+            del.onclick = function() {
+                li.remove();
+                updateCount();  // calling update count function
+                deleteData(text);   // local storage
+            }
+
+            li.appendChild(del);
+
+            // checked function
+            let check = document.createElement("a");
+            check.setAttribute("href", "#");
+            check.classList.add("fa-solid", "fa-check", "float-start", "me-2");
+
+            check.onclick = function() {
+                document.querySelector("#done").appendChild(li);
+                check.remove();
+                updateCount();  // calling update count function
+                checkData(text);    // local storage
+            }
+            
+            // check done status first, then work
+            if (!done) li.appendChild(check);
+
+            if (done) {
+                document.querySelector("#done").appendChild(li);
+            }
+            else {
+                document.querySelector("#todo").appendChild(li);
+            }
+            
+        }
+
+    </script>
+</body>
+</html>
